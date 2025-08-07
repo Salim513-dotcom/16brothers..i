@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16 Brothers Group</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .login-notice {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            font-weight: 500;
+            border-radius: 10px;
+            margin: 20px 30px;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .summary-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .summary-card .amount {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .summary-card.loans .amount {
+            color: #e74c3c;
+        }
+
+        .summary-card.net .amount {
+            color: #3498db;
+        }
+
+        .add-member-btn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .add-member-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(39, 174, 96, 0.4);
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 30px;
+        }
+
+        .member-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .member-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+        }
+
+        .member-image {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px auto;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .member-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .member-info {
+            padding: 25px;
+        }
+
+        .member-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .financial-info {
+            display: grid;
+            gap: 12px;
+        }
+
+        .financial-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .financial-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            margin-top: 8px;
+            padding-top: 15px;
+            border-top: 2px solid #3498db;
+        }
+
+        .financial-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .financial-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .deposit {
+            color: #27ae60;
+        }
+
+        .loan {
+            color: #e74c3c;
+        }
+
+        .net-total {
+            color: #3498db;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #e74c3c;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-group input[type="file"] {
+            padding: 8px;
+            border: 2px dashed #e9ecef;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+
+        .form-group input[type="file"]:hover {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .table-container {
+            padding: 30px;
+        }
+
+        .table-wrapper {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .table-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem;
+        }
+
+        th, td {
+            padding: 15px;
+            border-right: 1px solid #dee2e6;
+            text-align: left;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #dee2e6;
+            transition: background-color 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        tfoot tr {
+            background: #f8f9fa;
+            border-top: 2px solid #3498db;
+            font-weight: bold;
+        }
+
+        .table-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 0 auto;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .table-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .hidden-financial {
+            color: #999;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        @media (max-width: 768px) {
+            .members-grid {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+            
+            .summary-cards {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .add-member-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+                margin: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>16 Brothers</h1>
+            <p>Financial Overview</p>
+        </div>
+
+        <!-- Login Notice for non-logged in users -->
+        <div class="login-notice" id="loginNotice">
+            🔒 Login required to view financial details. Only member names and photos are visible.
+        </div>
+
+        <div class="summary-cards" id="summaryCards">
+            <div class="summary-card deposits">
+                <h3>Total Deposits</h3>
+                <div class="amount" id="totalDeposits">Login Required</div>
+            </div>
+            <div class="summary-card loans">
+                <h3>Total Loans</h3>
+                <div class="amount" id="totalLoans">Login Required</div>
+            </div>
+            <div class="summary-card net">
+                <h3>Net Total</h3>
+                <div class="amount" id="netTotal">Login Required</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button class="add-member-btn" id="loginBtn" onclick="showLogin()" style="background: linear-gradient(135deg, #3498db, #2980b9);">🔐 Login to View Finances</button>
+            <button class="add-member-btn" id="logoutBtn" onclick="logout()" style="display: none; background: linear-gradient(135deg, #e74c3c, #c0392b);">🚪 Logout</button>
+            <button class="add-member-btn" id="addMemberBtn" onclick="openModal()" style="display: none;">+ Add New Brother</button>
+            <button class="add-member-btn" id="adminBtn" onclick="showAdminLogin()" style="display: none;">Admin Access</button>
+            <button class="add-member-btn" id="lockBtn" onclick="lockAdmin()" style="display: none; background: linear-gradient(135deg, #e74c3c, #c0392b);">🔒 Lock Admin</button>
+            <button class="add-member-btn" id="toggleViewBtn" onclick="toggleView()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">📊 Table View</button>
+        </div>
+
+        <!-- Card View -->
+        <div class="members-grid" id="membersGrid">
+            <!-- Member cards will be dynamically added here -->
+        </div>
+
+        <!-- Table View -->
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <h2>Brothers Overview Table</h2>
+                </div>
+                
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">#</th>
+                                <th style="text-align: center;"></th>
+                                <th style="text-align: center;">Name</th>
+                                <th style="text-align: right; color: #27ae60;">Deposits (Rs.)</th>
+                                <th style="text-align: right; color: #e74c3c;">Loans (Rs.)</th>
+                                <th style="text-align: right; color: #3498db;">Net Total (Rs.)</th>
+                                <th id="actionsHeader" style="text-align: center; display: none;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Table rows will be dynamically added here -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td style="text-align: center;">Total</td>
+                                <td style="text-align: center;">👥</td>
+                                <td id="totalMembersTable">16 Brothers</td>
+                                <td style="text-align: right; color: #27ae60;" id="totalDepositsTable">Login Required</td>
+                                <td style="text-align: right; color: #e74c3c;" id="totalLoansTable">Login Required</td>
+                                <td style="text-align: right; color: #3498db; font-size: 1.1rem;" id="netTotalTable">Login Required</td>
+                                <td id="actionsFooter" style="display: none;"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <h2>🔐 Login to View Financial Details</h2>
+            <p style="color: #666; margin-bottom: 20px;">Enter your credentials to access financial information:</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="userId">User ID:</label>
+                    <input type="text" id="userId" required placeholder="Enter your ID">
+                </div>
+                <div class="form-group">
+                    <label for="userPassword">Password:</label>
+                    <input type="password" id="userPassword" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+            <div id="loginError" style="color: #e74c3c; margin-top: 10px; display: none;">
+                Invalid credentials. Please try again.
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAdminModal()">&times;</span>
+            <h2>Admin Access</h2>
+            <p style="color: #666; margin-bottom: 20px;">Enter admin code to enable editing:</p>
+            <form id="adminForm">
+                <div class="form-group">
+                    <label for="adminCode">Admin Code:</label>
+                    <input type="password" id="adminCode" required placeholder="Enter admin code">
+                </div>
+                <button type="submit" class="submit-btn">Unlock Admin Mode</button>
+            </form>
+            <div id="adminError" style="color: #e74c3c; margin-top: 10px; display: none;">
+                Incorrect admin code. Please try again.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing members -->
+    <div id="memberModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Add New Brother</h2>
+            <form id="memberForm">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageUrl">Profile Image URL (optional):</label>
+                    <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg">
+                    <small style="color: #666; font-size: 0.9rem; margin-top: 5px; display: block;">
+                        Or upload an image file:
+                    </small>
+                    <input type="file" id="imageFile" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="deposit">Deposit Amount (Rs.):</label>
+                    <input type="number" id="deposit" step="0.01" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="loan">Loan Amount (Rs.):</label>
+                    <input type="number" id="loan" step="0.01" min="0" value="0">
+                </div>
+                <button type="submit" class="submit-btn">Save Brother</button>
+            </form>
+            <div id="formMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global error handler to catch and display errors
+        window.addEventListener('error', function(event) {
+            console.error('Uncaught error:', event.error);
+            showMessage('An error occurred: ' + event.error.message, 'error');
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            showMessage('Promise error: ' + event.reason, 'error');
+        });
+
+        let members = [];
+        let editingIndex = -1;
+        let adminMode = false;
+        let userLoggedIn = false;
+        let currentView = 'cards';
+        const ADMIN_CODE = "Salim333";
+        const USER_ID = "Jaganath";
+        const USER_PASSWORD = "9842660334";
+
+        // Cloud configuration (placeholder - not functional without proper setup)
+        let cloudEnabled = false;
+
+        function showMessage(message, type = 'success') {
+            const messageDiv = document.getElementById('formMessage');
+            if (messageDiv) {
+                messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+                setTimeout(() => {
+                    messageDiv.innerHTML = '';
+                }, 5000);
+            } else {
+                // Fallback alert if form message div isn't available
+                console.log(`${type.toUpperCase()}: ${message}`);
+            }
+        }
+
+        function testConnection() {
+            try {
+                showMessage('Testing connection... (Demo mode - no real cloud connection)');
+                setTimeout(() => {
+                    showMessage('Connection test completed. Using local storage.');
+                }, 1000);
+            } catch (error) {
+                console.error('Connection test error:', error);
+                showMessage('Connection test failed: ' + error.message, 'error');
+            }
+        }
+
+        function loadFromCloud() {
+            try {
+                showMessage('Loading from cloud... (Demo mode)');
+                setTimeout(() => {
+                    showMessage('Demo data loaded successfully!');
+                    renderMembers();
+                    updateSummary();
+                }, 1000);
+            } catch (error) {
+                console.error('Load error:', error);
+                showMessage('Failed to load from cloud: ' + error.message, 'error');
+            }
+        }
+
+        function showLogin() {
+            try {
+                const modal = document.getElementById('loginModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Show login error:', error);
+                showMessage('Error opening login modal', 'error');
+            }
+        }
+
+        function closeLoginModal() {
+            try {
+                const modal = document.getElementById('loginModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+                
+                const userId = document.getElementById('userId');
+                const userPassword = document.getElementById('userPassword');
+                const loginError = document.getElementById('loginError');
+                
+                if (userId) userId.value = '';
+                if (userPassword) userPassword.value = '';
+                if (loginError) loginError.style.display = 'none';
+            } catch (error) {
+                console.error('Close login error:', error);
+            }
+        }
+
+        function login() {
+            try {
+                userLoggedIn = true;
+                
+                const elements = {
+                    loginBtn: document.getElementById('loginBtn'),
+                    logoutBtn: document.getElementById('logoutBtn'),
+                    adminBtn: document.getElementById('adminBtn'),
+                    loginNotice: document.getElementById('loginNotice')
+                };
+
+                if (elements.loginBtn) elements.loginBtn.style.display = 'none';
+                if (elements.logoutBtn) elements.logoutBtn.style.display = 'inline-block';
+                if (elements.adminBtn) elements.adminBtn.style.display = 'inline-block';
+                if (elements.loginNotice) elements.loginNotice.style.display = 'none';
+                
+                renderMembers();
+                updateSummary();
+                closeLoginModal();
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('Login error occurred', 'error');
+            }
+        }
+
+        function logout() {
+            try {
+                userLoggedIn = false;
+                adminMode = false;
+                
+                const elements = {
+                    loginBtn: document.getElementById('loginBtn'),
+                    logoutBtn: document.getElementById('logoutBtn'),
+                    adminBtn: document.getElementById('adminBtn'),
+                    addMemberBtn: document.getElementById('addMemberBtn'),
+                    lockBtn: document.getElementById('lockBtn'),
+                    loginNotice: document.getElementById('loginNotice')
+                };
+
+                if (elements.loginBtn) elements.loginBtn.style.display = 'inline-block';
+                if (elements.logoutBtn) elements.logoutBtn.style.display = 'none';
+                if (elements.adminBtn) elements.adminBtn.style.display = 'none';
+                if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'none';
+                if (elements.lockBtn) elements.lockBtn.style.display = 'none';
+                if (elements.loginNotice) elements.loginNotice.style.display = 'block';
+                
+                renderMembers();
+                updateSummary();
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        function openModal(index = -1) {
+            try {
+                if (!adminMode) {
+                    alert('Admin access required to edit members.');
+                    return;
+                }
+                
+                editingIndex = index;
+                const modal = document.getElementById('memberModal');
+                const title = document.getElementById('modalTitle');
+                const form = document.getElementById('memberForm');
+                
+                if (!modal || !title || !form) {
+                    throw new Error('Modal elements not found');
+                }
+                
+                if (index >= 0 && members[index]) {
+                    title.textContent = 'Edit Brother';
+                    const member = members[index];
+                    
+                    const elements = {
+                        name: document.getElementById('name'),
+                        imageUrl: document.getElementById('imageUrl'),
+                        deposit: document.getElementById('deposit'),
+                        loan: document.getElementById('loan'),
+                        imageFile: document.getElementById('imageFile')
+                    };
+
+                    if (elements.name) elements.name.value = member.name || '';
+                    if (elements.imageUrl) elements.imageUrl.value = member.imageUrl || '';
+                    if (elements.deposit) elements.deposit.value = member.deposit || 0;
+                    if (elements.loan) elements.loan.value = member.loan || 0;
+                    if (elements.imageFile) elements.imageFile.value = '';
+                } else {
+                    title.textContent = 'Add New Brother';
+                    form.reset();
+                }
+                
+                modal.style.display = 'block';
+            } catch (error) {
+                console.error('Open modal error:', error);
+                showMessage('Error opening form: ' + error.message, 'error');
+            }
+        }
+
+        function closeModal() {
+            try {
+                const modal = document.getElementById('memberModal');
+                const imageFile = document.getElementById('imageFile');
+                const formMessage = document.getElementById('formMessage');
+                
+                if (modal) modal.style.display = 'none';
+                if (imageFile) imageFile.value = '';
+                if (formMessage) formMessage.innerHTML = '';
+                
+                editingIndex = -1;
+            } catch (error) {
+                console.error('Close modal error:', error);
+            }
+        }
+
+        function deleteMember(index) {
+            try {
+                if (!adminMode) {
+                    alert('Admin access required to delete members.');
+                    return;
+                }
+                
+                if (!members[index]) {
+                    showMessage('Member not found', 'error');
+                    return;
+                }
+                
+                if (confirm('Are you sure you want to remove this brother from the portfolio?')) {
+                    members.splice(index, 1);
+                    renderMembers();
+                    updateSummary();
+                    showMessage('Member deleted successfully!');
+                }
+            } catch (error) {
+                console.error('Delete member error:', error);
+                showMessage('Failed to delete member: ' + error.message, 'error');
+            }
+        }
+
+        function showAdminLogin() {
+            try {
+                const modal = document.getElementById('adminModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Show admin login error:', error);
+                showMessage('Error opening admin modal', 'error');
+            }
+        }
+
+        function closeAdminModal() {
+            try {
+                const modal = document.getElementById('adminModal');
+                const adminCode = document.getElementById('adminCode');
+                const adminError = document.getElementById('adminError');
+                
+                if (modal) modal.style.display = 'none';
+                if (adminCode) adminCode.value = '';
+                if (adminError) adminError.style.display = 'none';
+            } catch (error) {
+                console.error('Close admin modal error:', error);
+            }
+        }
+
+        function enableAdminMode() {
+            try {
+                adminMode = true;
+                
+                const elements = {
+                    addMemberBtn: document.getElementById('addMemberBtn'),
+                    adminBtn: document.getElementById('adminBtn'),
+                    lockBtn: document.getElementById('lockBtn')
+                };
+
+                if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'inline-block';
+                if (elements.adminBtn) elements.adminBtn.style.display = 'none';
+                if (elements.lockBtn) elements.lockBtn.style.display = 'inline-block';
+                
+                renderMembers();
+                closeAdminModal();
+            } catch (error) {
+                console.error('Enable admin mode error:', error);
+                showMessage('Error enabling admin mode', 'error');
+            }
+        }
+
+        function lockAdmin() {
+            try {
+                adminMode = false;
+                
+                const elements = {
+                    addMemberBtn: document.getElementById('addMemberBtn'),
+                    adminBtn: document.getElementById('adminBtn'),
+                    lockBtn: document.getElementById('lockBtn')
+                };
+
+                if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'none';
+                if (elements.adminBtn) elements.adminBtn.style.display = 'inline-block';
+                if (elements.lockBtn) elements.lockBtn.style.display = 'none';
+                
+                renderMembers();
+            } catch (error) {
+                console.error('Lock admin error:', error);
+            }
+        }
+
+        function renderMembers() {
+            try {
+                if (currentView === 'cards') {
+                    renderCardsView();
+                } else {
+                    renderTableView();
+                }
+            } catch (error) {
+                console.error('Render members error:', error);
+                showMessage('Error rendering members: ' + error.message, 'error');
+            }
+        }
+
+        function renderCardsView() {
+            try {
+                const grid = document.getElementById('membersGrid');
+                if (!grid) {
+                    throw new Error('Members grid element not found');
+                }
+                
+                grid.innerHTML = '';
+
+                members.forEach((member, index) => {
+                    const netTotal = (member.deposit || 0) - (member.loan || 0);
+                    const card = document.createElement('div');
+                    card.className = 'member-card';
+                    
+                    const financialContent = userLoggedIn ? `
+                        <div class="financial-row">
+                            <span class="financial-label">Deposits:</span>
+                            <span class="financial-value deposit">Rs. ${(member.deposit || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="financial-row">
+                            <span class="financial-label">Loans:</span>
+                            <span class="financial-value loan">Rs. ${(member.loan || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="financial-row">
+                            <span class="financial-label">Net Total:</span>
+                            <span class="financial-value net-total">Rs. ${netTotal.toFixed(2)}</span>
+                        </div>
+                    ` : `
+                        <div class="financial-row">
+                            <span class="financial-label">Deposits:</span>
+                            <span class="financial-value hidden-financial">Login to view</span>
+                        </div>
+                        <div class="financial-row">
+                            <span class="financial-label">Loans:</span>
+                            <span class="financial-value hidden-financial">Login to view</span>
+                        </div>
+                        <div class="financial-row">
+                            <span class="financial-label">Net Total:</span>
+                            <span class="financial-value hidden-financial">Login to view</span>
+                        </div>
+                    `;
+                    
+                    const memberName = member.name || 'Unknown';
+                    const firstLetter = memberName.charAt(0).toUpperCase();
+                    
+                    card.innerHTML = `
+                        <div class="member-image">
+                            ${member.imageUrl ? 
+                                `<img src="${member.imageUrl}" alt="${memberName}" onerror="this.style.display='none'; this.parentNode.innerHTML='${firstLetter}'" />` :
+                                firstLetter
+                            }
+                        </div>
+                        <div class="member-info">
+                            <div class="member-name">${memberName}</div>
+                            <div class="financial-info">
+                                ${financialContent}
+                            </div>
+                            <div class="actions" style="display: ${adminMode ? 'block' : 'none'};">
+                                <button class="edit-btn" onclick="openModal(${index})">Edit</button>
+                                <button class="delete-btn" onclick="deleteMember(${index})">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Render cards view error:', error);
+                showMessage('Error rendering card view: ' + error.message, 'error');
+            }
+        }
+
+        function renderTableView() {
+            try {
+                const tableBody = document.getElementById('tableBody');
+                const actionsHeader = document.getElementById('actionsHeader');
+                const actionsFooter = document.getElementById('actionsFooter');
+                
+                if (!tableBody) {
+                    throw new Error('Table body element not found');
+                }
+                
+                if (actionsHeader) actionsHeader.style.display = adminMode ? 'table-cell' : 'none';
+                if (actionsFooter) actionsFooter.style.display = adminMode ? 'table-cell' : 'none';
+                
+                tableBody.innerHTML = '';
+
+                members.forEach((member, index) => {
+                    const netTotal = (member.deposit || 0) - (member.loan || 0);
+                    const row = document.createElement('tr');
+                    
+                    const depositsDisplay = userLoggedIn ? `Rs. ${(member.deposit || 0).toFixed(2)}` : 'Login required';
+                    const loansDisplay = userLoggedIn ? `Rs. ${(member.loan || 0).toFixed(2)}` : 'Login required';
+                    const netDisplay = userLoggedIn ? `Rs. ${netTotal.toFixed(2)}` : 'Login required';
+                    
+                    const memberName = member.name || 'Unknown';
+                    const firstLetter = memberName.charAt(0).toUpperCase();
+                    
+                    row.innerHTML = `
+                        <td style="text-align: center; font-weight: bold; color: #666;">${index + 1}</td>
+                        <td style="text-align: center;">
+                            <div class="table-image">
+                                ${member.imageUrl ? 
+                                    `<img src="${member.imageUrl}" alt="${memberName}" onerror="this.style.display='none'; this.parentNode.innerHTML='${firstLetter}'" />` :
+                                    firstLetter
+                                }
+                            </div>
+                        </td>
+                        <td style="font-weight: 500; color: #2c3e50;">${memberName}</td>
+                        <td style="text-align: right; color: ${userLoggedIn ? '#27ae60' : '#999'}; font-weight: bold;">${depositsDisplay}</td>
+                        <td style="text-align: right; color: ${userLoggedIn ? '#e74c3c' : '#999'}; font-weight: bold;">${loansDisplay}</td>
+                        <td style="text-align: right; color: ${userLoggedIn ? (netTotal >= 0 ? '#27ae60' : '#e74c3c') : '#999'}; font-weight: bold;">${netDisplay}</td>
+                        <td style="text-align: center; display: ${adminMode ? 'table-cell' : 'none'};">
+                            <button class="edit-btn" onclick="openModal(${index})" style="margin-right: 5px; padding: 5px 10px; font-size: 0.8rem;">Edit</button>
+                            <button class="delete-btn" onclick="deleteMember(${index})" style="padding: 5px 10px; font-size: 0.8rem;">Delete</button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+
+                updateTableSummary();
+            } catch (error) {
+                console.error('Render table view error:', error);
+                showMessage('Error rendering table view: ' + error.message, 'error');
+            }
+        }
+
+        function updateTableSummary() {
+            try {
+                const totalDeposits = members.reduce((sum, member) => sum + (member.deposit || 0), 0);
+                const totalLoans = members.reduce((sum, member) => sum + (member.loan || 0), 0);
+                const netTotal = totalDeposits - totalLoans;
+
+                const elements = {
+                    totalMembersTable: document.getElementById('totalMembersTable'),
+                    totalDepositsTable: document.getElementById('totalDepositsTable'),
+                    totalLoansTable: document.getElementById('totalLoansTable'),
+                    netTotalTable: document.getElementById('netTotalTable')
+                };
+
+                if (elements.totalMembersTable) {
+                    elements.totalMembersTable.textContent = `${members.length} Brothers`;
+                }
+                
+                if (userLoggedIn) {
+                    if (elements.totalDepositsTable) elements.totalDepositsTable.textContent = `Rs. ${totalDeposits.toFixed(2)}`;
+                    if (elements.totalLoansTable) elements.totalLoansTable.textContent = `Rs. ${totalLoans.toFixed(2)}`;
+                    if (elements.netTotalTable) elements.netTotalTable.textContent = `Rs. ${netTotal.toFixed(2)}`;
+                } else {
+                    if (elements.totalDepositsTable) elements.totalDepositsTable.textContent = 'Login Required';
+                    if (elements.totalLoansTable) elements.totalLoansTable.textContent = 'Login Required';
+                    if (elements.netTotalTable) elements.netTotalTable.textContent = 'Login Required';
+                }
+            } catch (error) {
+                console.error('Update table summary error:', error);
+            }
+        }
+
+        function toggleView() {
+            try {
+                const toggleBtn = document.getElementById('toggleViewBtn');
+                const membersGrid = document.getElementById('membersGrid');
+                const tableContainer = document.getElementById('tableContainer');
+
+                if (!toggleBtn || !membersGrid || !tableContainer) {
+                    throw new Error('Toggle view elements not found');
+                }
+
+                if (currentView === 'cards') {
+                    currentView = 'table';
+                    toggleBtn.textContent = '🎴 Card View';
+                    membersGrid.style.display = 'none';
+                    tableContainer.style.display = 'block';
+                    renderTableView();
+                } else {
+                    currentView = 'cards';
+                    toggleBtn.textContent = '📊 Table View';
+                    membersGrid.style.display = 'grid';
+                    tableContainer.style.display = 'none';
+                    renderCardsView();
+                }
+            } catch (error) {
+                console.error('Toggle view error:', error);
+                showMessage('Error toggling view: ' + error.message, 'error');
+            }
+        }
+
+        function updateSummary() {
+            try {
+                const totalDeposits = members.reduce((sum, member) => sum + (member.deposit || 0), 0);
+                const totalLoans = members.reduce((sum, member) => sum + (member.loan || 0), 0);
+                const netTotal = totalDeposits - totalLoans;
+
+                const elements = {
+                    totalDeposits: document.getElementById('totalDeposits'),
+                    totalLoans: document.getElementById('totalLoans'),
+                    netTotal: document.getElementById('netTotal')
+                };
+
+                if (userLoggedIn) {
+                    if (elements.totalDeposits) elements.totalDeposits.textContent = `Rs. ${totalDeposits.toFixed(2)}`;
+                    if (elements.totalLoans) elements.totalLoans.textContent = `Rs. ${totalLoans.toFixed(2)}`;
+                    if (elements.netTotal) elements.netTotal.textContent = `Rs. ${netTotal.toFixed(2)}`;
+                } else {
+                    if (elements.totalDeposits) elements.totalDeposits.textContent = 'Login Required';
+                    if (elements.totalLoans) elements.totalLoans.textContent = 'Login Required';
+                    if (elements.netTotal) elements.netTotal.textContent = 'Login Required';
+                }
+            } catch (error) {
+                console.error('Update summary error:', error);
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // User login form submission
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        try {
+                            const enteredId = document.getElementById('userId')?.value;
+                            const enteredPassword = document.getElementById('userPassword')?.value;
+                            const errorDiv = document.getElementById('loginError');
+                            
+                            if (enteredId === USER_ID && enteredPassword === USER_PASSWORD) {
+                                login();
+                                if (errorDiv) errorDiv.style.display = 'none';
+                            } else {
+                                if (errorDiv) errorDiv.style.display = 'block';
+                                const userIdEl = document.getElementById('userId');
+                                const userPasswordEl = document.getElementById('userPassword');
+                                if (userIdEl) userIdEl.value = '';
+                                if (userPasswordEl) userPasswordEl.value = '';
+                            }
+                        } catch (error) {
+                            console.error('Login form error:', error);
+                            showMessage('Login error: ' + error.message, 'error');
+                        }
+                    });
+                }
+
+                // Admin form submission
+                const adminForm = document.getElementById('adminForm');
+                if (adminForm) {
+                    adminForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        try {
+                            const enteredCode = document.getElementById('adminCode')?.value;
+                            const errorDiv = document.getElementById('adminError');
+                            
+                            if (enteredCode === ADMIN_CODE) {
+                                enableAdminMode();
+                                if (errorDiv) errorDiv.style.display = 'none';
+                            } else {
+                                if (errorDiv) errorDiv.style.display = 'block';
+                                const adminCodeEl = document.getElementById('adminCode');
+                                if (adminCodeEl) adminCodeEl.value = '';
+                            }
+                        } catch (error) {
+                            console.error('Admin form error:', error);
+                            showMessage('Admin login error: ' + error.message, 'error');
+                        }
+                    });
+                }
+
+                // Member form submission
+                const memberForm = document.getElementById('memberForm');
+                if (memberForm) {
+                    memberForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        try {
+                            if (!adminMode) {
+                                showMessage('Admin access required to save members.', 'error');
+                                return;
+                            }
+
+                            const name = document.getElementById('name')?.value?.trim();
+                            const deposit = parseFloat(document.getElementById('deposit')?.value) || 0;
+                            const loan = parseFloat(document.getElementById('loan')?.value) || 0;
+                            const imageFile = document.getElementById('imageFile')?.files[0];
+                            const imageUrlInput = document.getElementById('imageUrl')?.value?.trim();
+
+                            if (!name) {
+                                showMessage('Name is required.', 'error');
+                                return;
+                            }
+
+                            showMessage('Saving member...', 'loading');
+                            
+                            let imageUrl = imageUrlInput;
+
+                            // Handle image file (convert to data URL for demo)
+                            if (imageFile) {
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    imageUrl = e.target.result;
+                                    saveMemberData(name, deposit, loan, imageUrl);
+                                };
+                                reader.readAsDataURL(imageFile);
+                            } else {
+                                saveMemberData(name, deposit, loan, imageUrl);
+                            }
+
+                        } catch (error) {
+                            console.error('Member form error:', error);
+                            showMessage('Failed to save member: ' + error.message, 'error');
+                        }
+                    });
+                }
+
+                function saveMemberData(name, deposit, loan, imageUrl) {
+                    try {
+                        const memberData = {
+                            name: name,
+                            imageUrl: imageUrl || '',
+                            deposit: deposit,
+                            loan: loan
+                        };
+
+                        if (editingIndex >= 0) {
+                            // Update existing member
+                            members[editingIndex] = memberData;
+                            showMessage('Member updated successfully!');
+                        } else {
+                            // Add new member
+                            members.push(memberData);
+                            showMessage('New member added successfully!');
+                        }
+
+                        renderMembers();
+                        updateSummary();
+                        closeModal();
+
+                    } catch (error) {
+                        console.error('Save member data error:', error);
+                        showMessage('Failed to save member: ' + error.message, 'error');
+                    }
+                }
+
+                // Close modal when clicking outside of it
+                window.onclick = function(event) {
+                    try {
+                        const memberModal = document.getElementById('memberModal');
+                        const adminModal = document.getElementById('adminModal');
+                        const loginModal = document.getElementById('loginModal');
+                        
+                        if (event.target === memberModal) {
+                            closeModal();
+                        }
+                        if (event.target === adminModal) {
+                            closeAdminModal();
+                        }
+                        if (event.target === loginModal) {
+                            closeLoginModal();
+                        }
+                    } catch (error) {
+                        console.error('Window click error:', error);
+                    }
+                }
+
+                // Initialize with default members data
+                members = [
+            { name: "Moti Bhattarai", imageUrl: "moti.jpg", deposit: 0, loan: 355505 },
+            { name: "Anil Bhattarai", imageUrl: "anil.jpg", deposit: 75000, loan: 333340 },
+            { name: "Laxman Bhattarai", imageUrl: "laxman.jpg", deposit: 30000, loan: 459841 },
+            { name: "Bal Krishna Bhattarai", imageUrl: "bal krishna.jpg", deposit: 50000, loan: 422365 },
+            { name: "Sujan Bhattarai", imageUrl: "sujan.jpg", deposit: 75000, loan: 495129 },
+            { name: "Tanka Bhattarai", imageUrl: "tanka.jpg", deposit: 30000, loan: 148800 },
+            { name: "Dr.Nirajan Bhattarai", imageUrl: "nirajan.jpg", deposit: 75000, loan: 222000 },
+            { name: "Nagendra Bhattarai", imageUrl: "nagendra.jpg", deposit: 50000, loan: 247826 },
+            { name: "Dipen Bhattarai", imageUrl: "dipen.jpg", deposit: 30000, loan: 306628 },
+            { name: "Durga Bhattarai", imageUrl: "durga.jpg", deposit: 75000, loan: 179322 },
+            { name: "Jiban Bhattarai", imageUrl: "jiban.jpg", deposit: 50000, loan: 177110 },
+            { name: "Dipak Bhattarai", imageUrl: "dipak.jpg", deposit: 30000, loan: 177110 },
+            { name: "Bimal Bhattarai", imageUrl: "bimal.jpg", deposit: 50000, loan: 177110 },
+            { name: "Chandra Mani Bhattarai", imageUrl: "chandra.jpg", deposit: 75000, loan: 242298 },
+            { name: "Bharat Mohan Bhattarai", imageUrl: "bharat.jpg", deposit: 75000, loan: 177114 },
+            { name: "Parash Bhattarai", imageUrl: "paras.jpg", deposit: 30000, loan: 312176 }
+                ];
+
+                // Initial render (will show only names and photos)
+                renderMembers();
+                updateSummary();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showMessage('Application initialization error: ' + error.message, 'error');
+            }
+        });
+
+    </script>
+
+<!-- Appwrite SDK and setup -->
+<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.0"></script>
+<script>
+    const client = new Appwrite.Client();
+    client
+        .setEndpoint("https://nyc.cloud.appwrite.io/v1")
+        .setProject("6891fd99000b184f5bf3");
+
+    function loadMembersFromAppwrite() {
+        databases.listDocuments("6891fe0b003b4042234c", "6891fe2c0020ef16dd1f")
+            .then(response => {
+                members = response.documents;
+                renderMembers();
+                updateSummary();
+            })
+            .catch(error => {
+                console.error("Appwrite Load Error:", error);
+                showMessage("Failed to load from Appwrite: " + error.message, "error");
+            });
+    }
+
+    function saveMemberData(name, deposit, loan, imageUrl) {
+        const memberData = {
+            name,
+            deposit,
+            loan,
+            imageUrl: imageUrl || ''
+        };
+
+        const documentId = 'unique()';
+
+        databases.createDocument("6891fe0b003b4042234c", "6891fe2c0020ef16dd1f", documentId, memberData)
+            .then(() => {
+                showMessage('Member saved to Appwrite!');
+                loadMembersFromAppwrite();
+                closeModal();
+            })
+            .catch((error) => {
+                console.error("Appwrite Save Error:", error);
+                showMessage("Failed to save to Appwrite: " + error.message, "error");
+            });
+    }
+
+    // Load data on startup
+    document.addEventListener("DOMContentLoaded", () => {
+        loadMembersFromAppwrite();
+    });
+</script>
+
+
+<!-- DEBUGGING ENHANCEMENTS -->
+<script>
+    console.log("✅ Appwrite SDK Loaded:", typeof Appwrite !== "undefined");
+
+    client
+        .setEndpoint("https://nyc.cloud.appwrite.io/v1")
+        .setProject("6891fd99000b184f5bf3");
+
+    console.log("📡 Appwrite Client Configured");
+
+    const databases = new Appwrite.Databases(client);
+
+    function loadMembersFromAppwrite() {
+        console.log("📥 Attempting to load members from Appwrite...");
+        databases.listDocuments("6891fe0b003b4042234c", "6891fe2c0020ef16dd1f")
+            .then(response => {
+                console.log("✅ Data loaded from Appwrite:", response);
+                members = response.documents;
+                renderMembers();
+                updateSummary();
+            })
+            .catch(error => {
+                console.error("❌ Failed to load from Appwrite:", error);
+                showMessage("Failed to load from Appwrite: " + error.message, "error");
+            });
+    }
+
+    function saveMemberData(name, deposit, loan, imageUrl) {
+        console.log("📤 Saving member to Appwrite...");
+        const memberData = {
+            name,
+            deposit,
+            loan,
+            imageUrl: imageUrl || ''
+        };
+
+        databases.createDocument("6891fe0b003b4042234c", "6891fe2c0020ef16dd1f", 'unique()', memberData)
+            .then(() => {
+                console.log("✅ Member saved to Appwrite");
+                showMessage('Member saved to Appwrite!');
+                loadMembersFromAppwrite();
+                closeModal();
+            })
+            .catch((error) => {
+                console.error("❌ Save to Appwrite failed:", error);
+                showMessage("Failed to save to Appwrite: " + error.message, "error");
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        console.log("📄 DOM loaded — initializing Appwrite fetch...");
+        loadMembersFromAppwrite();
+    });
+</script>
+
+</body>
+</html>
