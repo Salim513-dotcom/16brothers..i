@@ -805,7 +805,7 @@
             });
     }
 
-    // Load members from Appwrite with better error handling
+    // FIXED: Load members from Appwrite with proper data structure handling
     function loadMembersFromAppwrite() {
         console.log("📥 Loading members from Appwrite...");
         showMessage('Loading data...', 'loading');
@@ -819,8 +819,18 @@
         
         databases.listDocuments(DATABASE_ID, COLLECTION_ID)
             .then(response => {
-                console.log("✅ Data loaded from Appwrite:", response);
-                members = response.documents || [];
+                console.log("✅ Raw data from Appwrite:", response);
+                
+                // Process the documents to ensure proper data types
+                members = response.documents.map(doc => ({
+                    $id: doc.$id,
+                    name: doc.name || '',
+                    imageUrl: doc.imageUrl || '',
+                    deposit: Number(doc.deposit) || 0,
+                    loan: Number(doc.loan) || 0
+                }));
+                
+                console.log("📊 Processed members:", members);
                 
                 if (members.length === 0) {
                     console.log("No members found, initializing with defaults");
@@ -869,7 +879,7 @@
         showMessage('Loaded default member data (demo mode)', 'success');
     }
 
-    // Save or update member in Appwrite
+    // FIXED: Save or update member in Appwrite with proper data handling
     function saveMemberToAppwrite(memberData) {
         console.log("📤 Saving member to Appwrite...", memberData);
         
@@ -878,6 +888,16 @@
             return Promise.reject('No database connection');
         }
         
+        // Ensure all numeric fields are properly converted
+        const cleanMemberData = {
+            name: String(memberData.name || ''),
+            imageUrl: String(memberData.imageUrl || ''),
+            deposit: Number(memberData.deposit) || 0,
+            loan: Number(memberData.loan) || 0
+        };
+        
+        console.log("📊 Clean member data:", cleanMemberData);
+        
         // Determine if this is an update or create
         const isUpdate = editingIndex >= 0 && members[editingIndex] && members[editingIndex].$id;
         
@@ -885,12 +905,26 @@
             const documentId = members[editingIndex].$id;
             console.log("🔄 Updating existing member with ID:", documentId);
             
-            return databases.updateDocument(DATABASE_ID, COLLECTION_ID, documentId, memberData)
+            return databases.updateDocument(DATABASE_ID, COLLECTION_ID, documentId, cleanMemberData)
                 .then((response) => {
                     console.log("✅ Member updated in Appwrite:", response);
-                    showMessage('Member updated successfully!');
-                    loadMembersFromAppwrite();
+                    
+                    // FIXED: Update local array immediately with the response data
+                    members[editingIndex] = {
+                        $id: response.$id,
+                        name: response.name,
+                        imageUrl: response.imageUrl || '',
+                        deposit: Number(response.deposit) || 0,
+                        loan: Number(response.loan) || 0
+                    };
+                    
+                    // Re-render with updated data
+                    renderMembers();
+                    updateSummary();
                     closeModal();
+                    showMessage('Member updated successfully!');
+                    
+                    return response;
                 })
                 .catch((error) => {
                     console.error("❌ Failed to update member:", error);
@@ -900,12 +934,28 @@
         } else {
             console.log("➕ Creating new member");
             
-            return databases.createDocument(DATABASE_ID, COLLECTION_ID, 'unique()', memberData)
+            return databases.createDocument(DATABASE_ID, COLLECTION_ID, 'unique()', cleanMemberData)
                 .then((response) => {
                     console.log("✅ Member created in Appwrite:", response);
-                    showMessage('Member added successfully!');
-                    loadMembersFromAppwrite();
+                    
+                    // FIXED: Add to local array immediately with the response data
+                    const newMember = {
+                        $id: response.$id,
+                        name: response.name,
+                        imageUrl: response.imageUrl || '',
+                        deposit: Number(response.deposit) || 0,
+                        loan: Number(response.loan) || 0
+                    };
+                    
+                    members.push(newMember);
+                    
+                    // Re-render with updated data
+                    renderMembers();
+                    updateSummary();
                     closeModal();
+                    showMessage('Member added successfully!');
+                    
+                    return response;
                 })
                 .catch((error) => {
                     console.error("❌ Failed to create member:", error);
@@ -915,8 +965,8 @@
         }
     }
 
-    // Delete member from Appwrite
-    function deleteMemberFromAppwrite(memberId) {
+    // FIXED: Delete member from Appwrite with immediate local update
+    function deleteMemberFromAppwrite(memberId, localIndex) {
         console.log("🗑️ Deleting member from Appwrite:", memberId);
         
         if (!databases) {
@@ -927,8 +977,16 @@
         return databases.deleteDocument(DATABASE_ID, COLLECTION_ID, memberId)
             .then(() => {
                 console.log("✅ Member deleted from Appwrite");
+                
+                // FIXED: Remove from local array immediately
+                members.splice(localIndex, 1);
+                
+                // Re-render with updated data
+                renderMembers();
+                updateSummary();
                 showMessage('Member deleted successfully!');
-                loadMembersFromAppwrite();
+                
+                return true;
             })
             .catch((error) => {
                 console.error("❌ Failed to delete member:", error);
@@ -1128,8 +1186,8 @@
             const member = members[index];
             
             if (member.$id && databases) {
-                // Delete from Appwrite
-                deleteMemberFromAppwrite(member.$id);
+                // Delete from Appwrite with immediate local update
+                deleteMemberFromAppwrite(member.$id, index);
             } else {
                 // Remove from local array only (demo mode)
                 members.splice(index, 1);
@@ -1406,7 +1464,7 @@
             });
         }
 
-        // Member form submission
+        // FIXED: Member form submission with proper data handling
         const memberForm = document.getElementById('memberForm');
         if (memberForm) {
             memberForm.addEventListener('submit', function(e) {
@@ -1437,11 +1495,15 @@
                     imageUrl: imageUrlInput || ''
                 };
 
+                console.log("💾 Form data to save:", memberData);
+
                 // Handle image file (convert to data URL for demo)
                 if (imageFile) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         memberData.imageUrl = e.target.result;
+                        console.log("📷 Image processed, saving with image data");
+                        
                         if (databases) {
                             saveMemberToAppwrite(memberData);
                         } else {
@@ -1460,6 +1522,8 @@
                     };
                     reader.readAsDataURL(imageFile);
                 } else {
+                    console.log("📝 No image file, saving text data only");
+                    
                     if (databases) {
                         saveMemberToAppwrite(memberData);
                     } else {
