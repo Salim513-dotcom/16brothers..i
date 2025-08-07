@@ -469,6 +469,60 @@
             border: 1px solid #c3e6cb;
         }
 
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1001;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.3s ease;
+        }
+
+        .status-message.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .connection-status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .connection-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
         @media (max-width: 768px) {
             .members-grid {
                 grid-template-columns: 1fr;
@@ -647,819 +701,826 @@
         </div>
     </div>
 
-    <script>
-        // Global error handler to catch and display errors
-        window.addEventListener('error', function(event) {
-            console.error('Uncaught error:', event.error);
-            showMessage('An error occurred: ' + event.error.message, 'error');
-        });
+    <!-- Status indicator -->
+    <div id="connectionStatus" class="connection-status disconnected">Connecting...</div>
 
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Unhandled promise rejection:', event.reason);
-            showMessage('Promise error: ' + event.reason, 'error');
-        });
+<!-- Appwrite SDK -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/appwrite/13.0.0/appwrite.min.js"></script>
 
-        let members = [];
-        let editingIndex = -1;
-        let adminMode = false;
-        let userLoggedIn = false;
-        let currentView = 'cards';
-        const ADMIN_CODE = "Salim333";
-        const USER_ID = "Jaganath";
-        const USER_PASSWORD = "9842660334";
-
-        // Cloud configuration (placeholder - not functional without proper setup)
-        let cloudEnabled = false;
-
-        function showMessage(message, type = 'success') {
-            const messageDiv = document.getElementById('formMessage');
-            if (messageDiv) {
-                messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
-                setTimeout(() => {
-                    messageDiv.innerHTML = '';
-                }, 5000);
-            } else {
-                // Fallback alert if form message div isn't available
-                console.log(`${type.toUpperCase()}: ${message}`);
-            }
-        }
-
-        function testConnection() {
-            try {
-                showMessage('Testing connection... (Demo mode - no real cloud connection)');
-                setTimeout(() => {
-                    showMessage('Connection test completed. Using local storage.');
-                }, 1000);
-            } catch (error) {
-                console.error('Connection test error:', error);
-                showMessage('Connection test failed: ' + error.message, 'error');
-            }
-        }
-
-        function loadFromCloud() {
-            try {
-                showMessage('Loading from cloud... (Demo mode)');
-                setTimeout(() => {
-                    showMessage('Demo data loaded successfully!');
-                    renderMembers();
-                    updateSummary();
-                }, 1000);
-            } catch (error) {
-                console.error('Load error:', error);
-                showMessage('Failed to load from cloud: ' + error.message, 'error');
-            }
-        }
-
-        function showLogin() {
-            try {
-                const modal = document.getElementById('loginModal');
-                if (modal) {
-                    modal.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Show login error:', error);
-                showMessage('Error opening login modal', 'error');
-            }
-        }
-
-        function closeLoginModal() {
-            try {
-                const modal = document.getElementById('loginModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-                
-                const userId = document.getElementById('userId');
-                const userPassword = document.getElementById('userPassword');
-                const loginError = document.getElementById('loginError');
-                
-                if (userId) userId.value = '';
-                if (userPassword) userPassword.value = '';
-                if (loginError) loginError.style.display = 'none';
-            } catch (error) {
-                console.error('Close login error:', error);
-            }
-        }
-
-        function login() {
-            try {
-                userLoggedIn = true;
-                
-                const elements = {
-                    loginBtn: document.getElementById('loginBtn'),
-                    logoutBtn: document.getElementById('logoutBtn'),
-                    adminBtn: document.getElementById('adminBtn'),
-                    loginNotice: document.getElementById('loginNotice')
-                };
-
-                if (elements.loginBtn) elements.loginBtn.style.display = 'none';
-                if (elements.logoutBtn) elements.logoutBtn.style.display = 'inline-block';
-                if (elements.adminBtn) elements.adminBtn.style.display = 'inline-block';
-                if (elements.loginNotice) elements.loginNotice.style.display = 'none';
-                
-                renderMembers();
-                updateSummary();
-                closeLoginModal();
-            } catch (error) {
-                console.error('Login error:', error);
-                showMessage('Login error occurred', 'error');
-            }
-        }
-
-        function logout() {
-            try {
-                userLoggedIn = false;
-                adminMode = false;
-                
-                const elements = {
-                    loginBtn: document.getElementById('loginBtn'),
-                    logoutBtn: document.getElementById('logoutBtn'),
-                    adminBtn: document.getElementById('adminBtn'),
-                    addMemberBtn: document.getElementById('addMemberBtn'),
-                    lockBtn: document.getElementById('lockBtn'),
-                    loginNotice: document.getElementById('loginNotice')
-                };
-
-                if (elements.loginBtn) elements.loginBtn.style.display = 'inline-block';
-                if (elements.logoutBtn) elements.logoutBtn.style.display = 'none';
-                if (elements.adminBtn) elements.adminBtn.style.display = 'none';
-                if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'none';
-                if (elements.lockBtn) elements.lockBtn.style.display = 'none';
-                if (elements.loginNotice) elements.loginNotice.style.display = 'block';
-                
-                renderMembers();
-                updateSummary();
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-        }
-
-        function openModal(index = -1) {
-            try {
-                if (!adminMode) {
-                    alert('Admin access required to edit members.');
-                    return;
-                }
-                
-                editingIndex = index;
-                const modal = document.getElementById('memberModal');
-                const title = document.getElementById('modalTitle');
-                const form = document.getElementById('memberForm');
-                
-                if (!modal || !title || !form) {
-                    throw new Error('Modal elements not found');
-                }
-                
-                if (index >= 0 && members[index]) {
-                    title.textContent = 'Edit Brother';
-                    const member = members[index];
-                    
-                    const elements = {
-                        name: document.getElementById('name'),
-                        imageUrl: document.getElementById('imageUrl'),
-                        deposit: document.getElementById('deposit'),
-                        loan: document.getElementById('loan'),
-                        imageFile: document.getElementById('imageFile')
-                    };
-
-                    if (elements.name) elements.name.value = member.name || '';
-                    if (elements.imageUrl) elements.imageUrl.value = member.imageUrl || '';
-                    if (elements.deposit) elements.deposit.value = member.deposit || 0;
-                    if (elements.loan) elements.loan.value = member.loan || 0;
-                    if (elements.imageFile) elements.imageFile.value = '';
-                } else {
-                    title.textContent = 'Add New Brother';
-                    form.reset();
-                }
-                
-                modal.style.display = 'block';
-            } catch (error) {
-                console.error('Open modal error:', error);
-                showMessage('Error opening form: ' + error.message, 'error');
-            }
-        }
-
-        function closeModal() {
-            try {
-                const modal = document.getElementById('memberModal');
-                const imageFile = document.getElementById('imageFile');
-                const formMessage = document.getElementById('formMessage');
-                
-                if (modal) modal.style.display = 'none';
-                if (imageFile) imageFile.value = '';
-                if (formMessage) formMessage.innerHTML = '';
-                
-                editingIndex = -1;
-            } catch (error) {
-                console.error('Close modal error:', error);
-            }
-        }
-
-        function deleteMember(index) {
-            try {
-                if (!adminMode) {
-                    alert('Admin access required to delete members.');
-                    return;
-                }
-                
-                if (!members[index]) {
-                    showMessage('Member not found', 'error');
-                    return;
-                }
-                
-                if (confirm('Are you sure you want to remove this brother from the portfolio?')) {
-                    members.splice(index, 1);
-                    renderMembers();
-                    updateSummary();
-                    showMessage('Member deleted successfully!');
-                }
-            } catch (error) {
-                console.error('Delete member error:', error);
-                showMessage('Failed to delete member: ' + error.message, 'error');
-            }
-        }
-
-        function showAdminLogin() {
-            try {
-                const modal = document.getElementById('adminModal');
-                if (modal) {
-                    modal.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Show admin login error:', error);
-                showMessage('Error opening admin modal', 'error');
-            }
-        }
-
-        function closeAdminModal() {
-            try {
-                const modal = document.getElementById('adminModal');
-                const adminCode = document.getElementById('adminCode');
-                const adminError = document.getElementById('adminError');
-                
-                if (modal) modal.style.display = 'none';
-                if (adminCode) adminCode.value = '';
-                if (adminError) adminError.style.display = 'none';
-            } catch (error) {
-                console.error('Close admin modal error:', error);
-            }
-        }
-
-        function enableAdminMode() {
-            try {
-                adminMode = true;
-                
-                const elements = {
-                    addMemberBtn: document.getElementById('addMemberBtn'),
-                    adminBtn: document.getElementById('adminBtn'),
-                    lockBtn: document.getElementById('lockBtn')
-                };
-
-                if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'inline-block';
-                if (elements.adminBtn) elements.adminBtn.style.display = 'none';
-                if (elements.lockBtn) elements.lockBtn.style.display = 'inline-block';
-                
-                renderMembers();
-                closeAdminModal();
-            } catch (error) {
-                console.error('Enable admin mode error:', error);
-                showMessage('Error enabling admin mode', 'error');
-            }
-        }
-
-        function lockAdmin() {
-            try {
-                adminMode = false;
-                
-                const elements = {
-                    addMemberBtn: document.getElementById('addMemberBtn'),
-                    adminBtn: document.getElementById('adminBtn'),
-                    lockBtn: document.getElementById('lockBtn')
-                };
-
-                if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'none';
-                if (elements.adminBtn) elements.adminBtn.style.display = 'inline-block';
-                if (elements.lockBtn) elements.lockBtn.style.display = 'none';
-                
-                renderMembers();
-            } catch (error) {
-                console.error('Lock admin error:', error);
-            }
-        }
-
-        function renderMembers() {
-            try {
-                if (currentView === 'cards') {
-                    renderCardsView();
-                } else {
-                    renderTableView();
-                }
-            } catch (error) {
-                console.error('Render members error:', error);
-                showMessage('Error rendering members: ' + error.message, 'error');
-            }
-        }
-
-        function renderCardsView() {
-            try {
-                const grid = document.getElementById('membersGrid');
-                if (!grid) {
-                    throw new Error('Members grid element not found');
-                }
-                
-                grid.innerHTML = '';
-
-                members.forEach((member, index) => {
-                    const netTotal = (member.deposit || 0) - (member.loan || 0);
-                    const card = document.createElement('div');
-                    card.className = 'member-card';
-                    
-                    const financialContent = userLoggedIn ? `
-                        <div class="financial-row">
-                            <span class="financial-label">Deposits:</span>
-                            <span class="financial-value deposit">Rs. ${(member.deposit || 0).toFixed(2)}</span>
-                        </div>
-                        <div class="financial-row">
-                            <span class="financial-label">Loans:</span>
-                            <span class="financial-value loan">Rs. ${(member.loan || 0).toFixed(2)}</span>
-                        </div>
-                        <div class="financial-row">
-                            <span class="financial-label">Net Total:</span>
-                            <span class="financial-value net-total">Rs. ${netTotal.toFixed(2)}</span>
-                        </div>
-                    ` : `
-                        <div class="financial-row">
-                            <span class="financial-label">Deposits:</span>
-                            <span class="financial-value hidden-financial">Login to view</span>
-                        </div>
-                        <div class="financial-row">
-                            <span class="financial-label">Loans:</span>
-                            <span class="financial-value hidden-financial">Login to view</span>
-                        </div>
-                        <div class="financial-row">
-                            <span class="financial-label">Net Total:</span>
-                            <span class="financial-value hidden-financial">Login to view</span>
-                        </div>
-                    `;
-                    
-                    const memberName = member.name || 'Unknown';
-                    const firstLetter = memberName.charAt(0).toUpperCase();
-                    
-                    card.innerHTML = `
-                        <div class="member-image">
-                            ${member.imageUrl ? 
-                                `<img src="${member.imageUrl}" alt="${memberName}" onerror="this.style.display='none'; this.parentNode.innerHTML='${firstLetter}'" />` :
-                                firstLetter
-                            }
-                        </div>
-                        <div class="member-info">
-                            <div class="member-name">${memberName}</div>
-                            <div class="financial-info">
-                                ${financialContent}
-                            </div>
-                            <div class="actions" style="display: ${adminMode ? 'block' : 'none'};">
-                                <button class="edit-btn" onclick="openModal(${index})">Edit</button>
-                                <button class="delete-btn" onclick="deleteMember(${index})">Delete</button>
-                            </div>
-                        </div>
-                    `;
-                    
-                    grid.appendChild(card);
-                });
-            } catch (error) {
-                console.error('Render cards view error:', error);
-                showMessage('Error rendering card view: ' + error.message, 'error');
-            }
-        }
-
-        function renderTableView() {
-            try {
-                const tableBody = document.getElementById('tableBody');
-                const actionsHeader = document.getElementById('actionsHeader');
-                const actionsFooter = document.getElementById('actionsFooter');
-                
-                if (!tableBody) {
-                    throw new Error('Table body element not found');
-                }
-                
-                if (actionsHeader) actionsHeader.style.display = adminMode ? 'table-cell' : 'none';
-                if (actionsFooter) actionsFooter.style.display = adminMode ? 'table-cell' : 'none';
-                
-                tableBody.innerHTML = '';
-
-                members.forEach((member, index) => {
-                    const netTotal = (member.deposit || 0) - (member.loan || 0);
-                    const row = document.createElement('tr');
-                    
-                    const depositsDisplay = userLoggedIn ? `Rs. ${(member.deposit || 0).toFixed(2)}` : 'Login required';
-                    const loansDisplay = userLoggedIn ? `Rs. ${(member.loan || 0).toFixed(2)}` : 'Login required';
-                    const netDisplay = userLoggedIn ? `Rs. ${netTotal.toFixed(2)}` : 'Login required';
-                    
-                    const memberName = member.name || 'Unknown';
-                    const firstLetter = memberName.charAt(0).toUpperCase();
-                    
-                    row.innerHTML = `
-                        <td style="text-align: center; font-weight: bold; color: #666;">${index + 1}</td>
-                        <td style="text-align: center;">
-                            <div class="table-image">
-                                ${member.imageUrl ? 
-                                    `<img src="${member.imageUrl}" alt="${memberName}" onerror="this.style.display='none'; this.parentNode.innerHTML='${firstLetter}'" />` :
-                                    firstLetter
-                                }
-                            </div>
-                        </td>
-                        <td style="font-weight: 500; color: #2c3e50;">${memberName}</td>
-                        <td style="text-align: right; color: ${userLoggedIn ? '#27ae60' : '#999'}; font-weight: bold;">${depositsDisplay}</td>
-                        <td style="text-align: right; color: ${userLoggedIn ? '#e74c3c' : '#999'}; font-weight: bold;">${loansDisplay}</td>
-                        <td style="text-align: right; color: ${userLoggedIn ? (netTotal >= 0 ? '#27ae60' : '#e74c3c') : '#999'}; font-weight: bold;">${netDisplay}</td>
-                        <td style="text-align: center; display: ${adminMode ? 'table-cell' : 'none'};">
-                            <button class="edit-btn" onclick="openModal(${index})" style="margin-right: 5px; padding: 5px 10px; font-size: 0.8rem;">Edit</button>
-                            <button class="delete-btn" onclick="deleteMember(${index})" style="padding: 5px 10px; font-size: 0.8rem;">Delete</button>
-                        </td>
-                    `;
-                    
-                    tableBody.appendChild(row);
-                });
-
-                updateTableSummary();
-            } catch (error) {
-                console.error('Render table view error:', error);
-                showMessage('Error rendering table view: ' + error.message, 'error');
-            }
-        }
-
-        function updateTableSummary() {
-            try {
-                const totalDeposits = members.reduce((sum, member) => sum + (member.deposit || 0), 0);
-                const totalLoans = members.reduce((sum, member) => sum + (member.loan || 0), 0);
-                const netTotal = totalDeposits - totalLoans;
-
-                const elements = {
-                    totalMembersTable: document.getElementById('totalMembersTable'),
-                    totalDepositsTable: document.getElementById('totalDepositsTable'),
-                    totalLoansTable: document.getElementById('totalLoansTable'),
-                    netTotalTable: document.getElementById('netTotalTable')
-                };
-
-                if (elements.totalMembersTable) {
-                    elements.totalMembersTable.textContent = `${members.length} Brothers`;
-                }
-                
-                if (userLoggedIn) {
-                    if (elements.totalDepositsTable) elements.totalDepositsTable.textContent = `Rs. ${totalDeposits.toFixed(2)}`;
-                    if (elements.totalLoansTable) elements.totalLoansTable.textContent = `Rs. ${totalLoans.toFixed(2)}`;
-                    if (elements.netTotalTable) elements.netTotalTable.textContent = `Rs. ${netTotal.toFixed(2)}`;
-                } else {
-                    if (elements.totalDepositsTable) elements.totalDepositsTable.textContent = 'Login Required';
-                    if (elements.totalLoansTable) elements.totalLoansTable.textContent = 'Login Required';
-                    if (elements.netTotalTable) elements.netTotalTable.textContent = 'Login Required';
-                }
-            } catch (error) {
-                console.error('Update table summary error:', error);
-            }
-        }
-
-        function toggleView() {
-            try {
-                const toggleBtn = document.getElementById('toggleViewBtn');
-                const membersGrid = document.getElementById('membersGrid');
-                const tableContainer = document.getElementById('tableContainer');
-
-                if (!toggleBtn || !membersGrid || !tableContainer) {
-                    throw new Error('Toggle view elements not found');
-                }
-
-                if (currentView === 'cards') {
-                    currentView = 'table';
-                    toggleBtn.textContent = '🎴 Card View';
-                    membersGrid.style.display = 'none';
-                    tableContainer.style.display = 'block';
-                    renderTableView();
-                } else {
-                    currentView = 'cards';
-                    toggleBtn.textContent = '📊 Table View';
-                    membersGrid.style.display = 'grid';
-                    tableContainer.style.display = 'none';
-                    renderCardsView();
-                }
-            } catch (error) {
-                console.error('Toggle view error:', error);
-                showMessage('Error toggling view: ' + error.message, 'error');
-            }
-        }
-
-        function updateSummary() {
-            try {
-                const totalDeposits = members.reduce((sum, member) => sum + (member.deposit || 0), 0);
-                const totalLoans = members.reduce((sum, member) => sum + (member.loan || 0), 0);
-                const netTotal = totalDeposits - totalLoans;
-
-                const elements = {
-                    totalDeposits: document.getElementById('totalDeposits'),
-                    totalLoans: document.getElementById('totalLoans'),
-                    netTotal: document.getElementById('netTotal')
-                };
-
-                if (userLoggedIn) {
-                    if (elements.totalDeposits) elements.totalDeposits.textContent = `Rs. ${totalDeposits.toFixed(2)}`;
-                    if (elements.totalLoans) elements.totalLoans.textContent = `Rs. ${totalLoans.toFixed(2)}`;
-                    if (elements.netTotal) elements.netTotal.textContent = `Rs. ${netTotal.toFixed(2)}`;
-                } else {
-                    if (elements.totalDeposits) elements.totalDeposits.textContent = 'Login Required';
-                    if (elements.totalLoans) elements.totalLoans.textContent = 'Login Required';
-                    if (elements.netTotal) elements.netTotal.textContent = 'Login Required';
-                }
-            } catch (error) {
-                console.error('Update summary error:', error);
-            }
-        }
-
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                // User login form submission
-                const loginForm = document.getElementById('loginForm');
-                if (loginForm) {
-                    loginForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        try {
-                            const enteredId = document.getElementById('userId')?.value;
-                            const enteredPassword = document.getElementById('userPassword')?.value;
-                            const errorDiv = document.getElementById('loginError');
-                            
-                            if (enteredId === USER_ID && enteredPassword === USER_PASSWORD) {
-                                login();
-                                if (errorDiv) errorDiv.style.display = 'none';
-                            } else {
-                                if (errorDiv) errorDiv.style.display = 'block';
-                                const userIdEl = document.getElementById('userId');
-                                const userPasswordEl = document.getElementById('userPassword');
-                                if (userIdEl) userIdEl.value = '';
-                                if (userPasswordEl) userPasswordEl.value = '';
-                            }
-                        } catch (error) {
-                            console.error('Login form error:', error);
-                            showMessage('Login error: ' + error.message, 'error');
-                        }
-                    });
-                }
-
-                // Admin form submission
-                const adminForm = document.getElementById('adminForm');
-                if (adminForm) {
-                    adminForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        try {
-                            const enteredCode = document.getElementById('adminCode')?.value;
-                            const errorDiv = document.getElementById('adminError');
-                            
-                            if (enteredCode === ADMIN_CODE) {
-                                enableAdminMode();
-                                if (errorDiv) errorDiv.style.display = 'none';
-                            } else {
-                                if (errorDiv) errorDiv.style.display = 'block';
-                                const adminCodeEl = document.getElementById('adminCode');
-                                if (adminCodeEl) adminCodeEl.value = '';
-                            }
-                        } catch (error) {
-                            console.error('Admin form error:', error);
-                            showMessage('Admin login error: ' + error.message, 'error');
-                        }
-                    });
-                }
-
-                // Member form submission
-                const memberForm = document.getElementById('memberForm');
-                if (memberForm) {
-                    memberForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-
-                        try {
-                            if (!adminMode) {
-                                showMessage('Admin access required to save members.', 'error');
-                                return;
-                            }
-
-                            const name = document.getElementById('name')?.value?.trim();
-                            const deposit = parseFloat(document.getElementById('deposit')?.value) || 0;
-                            const loan = parseFloat(document.getElementById('loan')?.value) || 0;
-                            const imageFile = document.getElementById('imageFile')?.files[0];
-                            const imageUrlInput = document.getElementById('imageUrl')?.value?.trim();
-
-                            if (!name) {
-                                showMessage('Name is required.', 'error');
-                                return;
-                            }
-
-                            showMessage('Saving member...', 'loading');
-                            
-                            let imageUrl = imageUrlInput;
-
-                            // Handle image file (convert to data URL for demo)
-                            if (imageFile) {
-                                const reader = new FileReader();
-                                reader.onload = function(e) {
-                                    imageUrl = e.target.result;
-                                    saveMemberData(name, deposit, loan, imageUrl);
-                                };
-                                reader.readAsDataURL(imageFile);
-                            } else {
-                                saveMemberData(name, deposit, loan, imageUrl);
-                            }
-
-                        } catch (error) {
-                            console.error('Member form error:', error);
-                            showMessage('Failed to save member: ' + error.message, 'error');
-                        }
-                    });
-                }
-
-                function saveMemberData(name, deposit, loan, imageUrl) {
-                    try {
-                        const memberData = {
-                            name: name,
-                            imageUrl: imageUrl || '',
-                            deposit: deposit,
-                            loan: loan
-                        };
-
-                        if (editingIndex >= 0) {
-                            // Update existing member
-                            members[editingIndex] = memberData;
-                            showMessage('Member updated successfully!');
-                        } else {
-                            // Add new member
-                            members.push(memberData);
-                            showMessage('New member added successfully!');
-                        }
-
-                        renderMembers();
-                        updateSummary();
-                        closeModal();
-
-                    } catch (error) {
-                        console.error('Save member data error:', error);
-                        showMessage('Failed to save member: ' + error.message, 'error');
-                    }
-                }
-
-                // Close modal when clicking outside of it
-                window.onclick = function(event) {
-                    try {
-                        const memberModal = document.getElementById('memberModal');
-                        const adminModal = document.getElementById('adminModal');
-                        const loginModal = document.getElementById('loginModal');
-                        
-                        if (event.target === memberModal) {
-                            closeModal();
-                        }
-                        if (event.target === adminModal) {
-                            closeAdminModal();
-                        }
-                        if (event.target === loginModal) {
-                            closeLoginModal();
-                        }
-                    } catch (error) {
-                        console.error('Window click error:', error);
-                    }
-                }
-
-                // Initialize with default members data
-                members = [
-            { name: "Moti Bhattarai", imageUrl: "moti.jpg", deposit: 0, loan: 355505 },
-            { name: "Anil Bhattarai", imageUrl: "anil.jpg", deposit: 75000, loan: 333340 },
-            { name: "Laxman Bhattarai", imageUrl: "laxman.jpg", deposit: 30000, loan: 459841 },
-            { name: "Bal Krishna Bhattarai", imageUrl: "bal krishna.jpg", deposit: 50000, loan: 422365 },
-            { name: "Sujan Bhattarai", imageUrl: "sujan.jpg", deposit: 75000, loan: 495129 },
-            { name: "Tanka Bhattarai", imageUrl: "tanka.jpg", deposit: 30000, loan: 148800 },
-            { name: "Dr.Nirajan Bhattarai", imageUrl: "nirajan.jpg", deposit: 75000, loan: 222000 },
-            { name: "Nagendra Bhattarai", imageUrl: "nagendra.jpg", deposit: 50000, loan: 247826 },
-            { name: "Dipen Bhattarai", imageUrl: "dipen.jpg", deposit: 30000, loan: 306628 },
-            { name: "Durga Bhattarai", imageUrl: "durga.jpg", deposit: 75000, loan: 179322 },
-            { name: "Jiban Bhattarai", imageUrl: "jiban.jpg", deposit: 50000, loan: 177110 },
-            { name: "Dipak Bhattarai", imageUrl: "dipak.jpg", deposit: 30000, loan: 177110 },
-            { name: "Bimal Bhattarai", imageUrl: "bimal.jpg", deposit: 50000, loan: 177110 },
-            { name: "Chandra Mani Bhattarai", imageUrl: "chandra.jpg", deposit: 75000, loan: 242298 },
-            { name: "Bharat Mohan Bhattarai", imageUrl: "bharat.jpg", deposit: 75000, loan: 177114 },
-            { name: "Parash Bhattarai", imageUrl: "paras.jpg", deposit: 30000, loan: 312176 }
-                ];
-
-                // Initial render (will show only names and photos)
-                renderMembers();
-                updateSummary();
-
-            } catch (error) {
-                console.error('Initialization error:', error);
-                showMessage('Application initialization error: ' + error.message, 'error');
-            }
-        });
-
-    </script>
-
-<!-- Appwrite SDK and setup -->
-<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.0"></script>
 <script>
-    const client = new Appwrite.Client();
-    client
-        .setEndpoint("https://nyc.cloud.appwrite.io/v1")
-        .setProject("6891fd99000b184f5bf3");
+    // Initialize Appwrite with error handling
+    let client, databases;
+    
+    try {
+        const { Client, Databases } = Appwrite;
+        
+        client = new Client()
+            .setEndpoint("https://nyc.cloud.appwrite.io/v1")
+            .setProject("6891fd99000b184f5bf3");
 
-    function loadMembersFromAppwrite() {
-        databases.listDocuments("6891fe0b003b4042234c", "6891fe2c0020ef16dd1f")
-            .then(response => {
-                members = response.documents;
-                renderMembers();
-                updateSummary();
-            })
-            .catch(error => {
-                console.error("Appwrite Load Error:", error);
-                showMessage("Failed to load from Appwrite: " + error.message, "error");
-            });
+        databases = new Databases(client);
+        
+        updateConnectionStatus(true);
+    } catch (error) {
+        console.error("Failed to initialize Appwrite:", error);
+        updateConnectionStatus(false, "Failed to initialize");
+    }
+    
+    const DATABASE_ID = "6891fe0b003b4042234c";
+    const COLLECTION_ID = "6891fe2c0020ef16dd1f";
+
+    // Global variables
+    let members = [];
+    let editingIndex = -1;
+    let adminMode = false;
+    let userLoggedIn = false;
+    let currentView = 'cards';
+    const ADMIN_CODE = "Salim333";
+    const USER_ID = "Jaganath";
+    const USER_PASSWORD = "9842660334";
+
+    // Connection status management
+    function updateConnectionStatus(connected, message = '') {
+        const statusEl = document.getElementById('connectionStatus');
+        if (statusEl) {
+            if (connected) {
+                statusEl.className = 'connection-status connected';
+                statusEl.textContent = '✅ Connected to Database';
+            } else {
+                statusEl.className = 'connection-status disconnected';
+                statusEl.textContent = `❌ ${message || 'Disconnected'}`;
+            }
+        }
     }
 
-    function saveMemberData(name, deposit, loan, imageUrl) {
-        const memberData = {
-            name,
-            deposit,
-            loan,
-            imageUrl: imageUrl || ''
-        };
+    // Enhanced message display
+    function showMessage(message, type = 'success') {
+        console.log(`${type.toUpperCase()}: ${message}`);
+        
+        // Remove existing status messages
+        const existingMsg = document.querySelector('.status-message');
+        if (existingMsg) {
+            existingMsg.remove();
+        }
+        
+        // Create new status message
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `status-message ${type}`;
+        msgDiv.textContent = message;
+        document.body.appendChild(msgDiv);
+        
+        // Animate in
+        setTimeout(() => msgDiv.classList.add('show'), 100);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            msgDiv.classList.remove('show');
+            setTimeout(() => msgDiv.remove(), 300);
+        }, 5000);
+        
+        // Also update form message if it exists
+        const formMsg = document.getElementById('formMessage');
+        if (formMsg) {
+            formMsg.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+    }
 
-        const documentId = 'unique()';
-
-        databases.createDocument("6891fe0b003b4042234c", "6891fe2c0020ef16dd1f", documentId, memberData)
+    // Test Appwrite connection
+    function testConnection() {
+        if (!databases) {
+            showMessage('Appwrite not initialized', 'error');
+            updateConnectionStatus(false, 'Not initialized');
+            return Promise.reject('Not initialized');
+        }
+        
+        return databases.listDocuments(DATABASE_ID, COLLECTION_ID, [])
             .then(() => {
-                showMessage('Member saved to Appwrite!');
-                loadMembersFromAppwrite();
-                closeModal();
+                updateConnectionStatus(true);
+                return true;
             })
             .catch((error) => {
-                console.error("Appwrite Save Error:", error);
-                showMessage("Failed to save to Appwrite: " + error.message, "error");
+                console.error("Connection test failed:", error);
+                updateConnectionStatus(false, `Error: ${error.message}`);
+                throw error;
             });
     }
 
-    // Load data on startup
-    document.addEventListener("DOMContentLoaded", () => {
-        loadMembersFromAppwrite();
-    });
-</script>
-
-
-<!-- DEBUGGING ENHANCEMENTS -->
-<script>
-    console.log("✅ Appwrite SDK Loaded:", typeof Appwrite !== "undefined");
-
-    client
-        .setEndpoint("https://nyc.cloud.appwrite.io/v1")
-        .setProject("6891fd99000b184f5bf3");
-
-    console.log("📡 Appwrite Client Configured");
-
-    const databases = new Appwrite.Databases(client);
-
+    // Load members from Appwrite with better error handling
     function loadMembersFromAppwrite() {
-        console.log("📥 Attempting to load members from Appwrite...");
-        databases.listDocuments("6891fe0b003b4042234c", "6891fe2c0020ef16dd1f")
+        console.log("📥 Loading members from Appwrite...");
+        showMessage('Loading data...', 'loading');
+        
+        if (!databases) {
+            console.error("Appwrite not initialized");
+            showMessage('Database connection not available', 'error');
+            initializeDefaultMembers();
+            return;
+        }
+        
+        databases.listDocuments(DATABASE_ID, COLLECTION_ID)
             .then(response => {
                 console.log("✅ Data loaded from Appwrite:", response);
-                members = response.documents;
-                renderMembers();
-                updateSummary();
+                members = response.documents || [];
+                
+                if (members.length === 0) {
+                    console.log("No members found, initializing with defaults");
+                    initializeDefaultMembers();
+                } else {
+                    renderMembers();
+                    updateSummary();
+                    showMessage(`Loaded ${members.length} members successfully`);
+                }
+                
+                updateConnectionStatus(true);
             })
             .catch(error => {
                 console.error("❌ Failed to load from Appwrite:", error);
-                showMessage("Failed to load from Appwrite: " + error.message, "error");
+                showMessage(`Failed to load data: ${error.message}`, 'error');
+                updateConnectionStatus(false, error.message);
+                
+                // Fallback to default members
+                initializeDefaultMembers();
             });
     }
 
-    function saveMemberData(name, deposit, loan, imageUrl) {
-        console.log("📤 Saving member to Appwrite...");
-        const memberData = {
-            name,
-            deposit,
-            loan,
-            imageUrl: imageUrl || ''
-        };
+    // Initialize with default members
+    function initializeDefaultMembers() {
+        console.log("🔄 Initializing with default member data...");
+        members = [
+            { name: "Moti Bhattarai", imageUrl: "", deposit: 0, loan: 355505 },
+            { name: "Anil Bhattarai", imageUrl: "", deposit: 75000, loan: 333340 },
+            { name: "Laxman Bhattarai", imageUrl: "", deposit: 30000, loan: 459841 },
+            { name: "Bal Krishna Bhattarai", imageUrl: "", deposit: 50000, loan: 422365 },
+            { name: "Sujan Bhattarai", imageUrl: "", deposit: 75000, loan: 495129 },
+            { name: "Tanka Bhattarai", imageUrl: "", deposit: 30000, loan: 148800 },
+            { name: "Dr.Nirajan Bhattarai", imageUrl: "", deposit: 75000, loan: 222000 },
+            { name: "Nagendra Bhattarai", imageUrl: "", deposit: 50000, loan: 247826 },
+            { name: "Dipen Bhattarai", imageUrl: "", deposit: 30000, loan: 306628 },
+            { name: "Durga Bhattarai", imageUrl: "", deposit: 75000, loan: 179322 },
+            { name: "Jiban Bhattarai", imageUrl: "", deposit: 50000, loan: 177110 },
+            { name: "Dipak Bhattarai", imageUrl: "", deposit: 30000, loan: 177110 },
+            { name: "Bimal Bhattarai", imageUrl: "", deposit: 50000, loan: 177110 },
+            { name: "Chandra Mani Bhattarai", imageUrl: "", deposit: 75000, loan: 242298 },
+            { name: "Bharat Mohan Bhattarai", imageUrl: "", deposit: 75000, loan: 177114 },
+            { name: "Parash Bhattarai", imageUrl: "", deposit: 30000, loan: 312176 }
+        ];
+        renderMembers();
+        updateSummary();
+        showMessage('Loaded default member data (demo mode)', 'success');
+    }
 
-        databases.createDocument("6891fe0b003b4042234c", "6891fe2c0020ef16dd1f", 'unique()', memberData)
+    // Save or update member in Appwrite
+    function saveMemberToAppwrite(memberData) {
+        console.log("📤 Saving member to Appwrite...", memberData);
+        
+        if (!databases) {
+            showMessage('Database connection not available', 'error');
+            return Promise.reject('No database connection');
+        }
+        
+        // Determine if this is an update or create
+        const isUpdate = editingIndex >= 0 && members[editingIndex] && members[editingIndex].$id;
+        
+        if (isUpdate) {
+            const documentId = members[editingIndex].$id;
+            console.log("🔄 Updating existing member with ID:", documentId);
+            
+            return databases.updateDocument(DATABASE_ID, COLLECTION_ID, documentId, memberData)
+                .then((response) => {
+                    console.log("✅ Member updated in Appwrite:", response);
+                    showMessage('Member updated successfully!');
+                    loadMembersFromAppwrite();
+                    closeModal();
+                })
+                .catch((error) => {
+                    console.error("❌ Failed to update member:", error);
+                    showMessage(`Failed to update member: ${error.message}`, 'error');
+                    throw error;
+                });
+        } else {
+            console.log("➕ Creating new member");
+            
+            return databases.createDocument(DATABASE_ID, COLLECTION_ID, 'unique()', memberData)
+                .then((response) => {
+                    console.log("✅ Member created in Appwrite:", response);
+                    showMessage('Member added successfully!');
+                    loadMembersFromAppwrite();
+                    closeModal();
+                })
+                .catch((error) => {
+                    console.error("❌ Failed to create member:", error);
+                    showMessage(`Failed to create member: ${error.message}`, 'error');
+                    throw error;
+                });
+        }
+    }
+
+    // Delete member from Appwrite
+    function deleteMemberFromAppwrite(memberId) {
+        console.log("🗑️ Deleting member from Appwrite:", memberId);
+        
+        if (!databases) {
+            showMessage('Database connection not available', 'error');
+            return Promise.reject('No database connection');
+        }
+        
+        return databases.deleteDocument(DATABASE_ID, COLLECTION_ID, memberId)
             .then(() => {
-                console.log("✅ Member saved to Appwrite");
-                showMessage('Member saved to Appwrite!');
+                console.log("✅ Member deleted from Appwrite");
+                showMessage('Member deleted successfully!');
                 loadMembersFromAppwrite();
-                closeModal();
             })
             .catch((error) => {
-                console.error("❌ Save to Appwrite failed:", error);
-                showMessage("Failed to save to Appwrite: " + error.message, "error");
+                console.error("❌ Failed to delete member:", error);
+                showMessage(`Failed to delete member: ${error.message}`, 'error');
+                throw error;
             });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        console.log("📄 DOM loaded — initializing Appwrite fetch...");
-        loadMembersFromAppwrite();
+    // Login functions
+    function showLogin() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+
+    function closeLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        
+        const userId = document.getElementById('userId');
+        const userPassword = document.getElementById('userPassword');
+        const loginError = document.getElementById('loginError');
+        
+        if (userId) userId.value = '';
+        if (userPassword) userPassword.value = '';
+        if (loginError) loginError.style.display = 'none';
+    }
+
+    function login() {
+        userLoggedIn = true;
+        
+        const elements = {
+            loginBtn: document.getElementById('loginBtn'),
+            logoutBtn: document.getElementById('logoutBtn'),
+            adminBtn: document.getElementById('adminBtn'),
+            loginNotice: document.getElementById('loginNotice')
+        };
+
+        if (elements.loginBtn) elements.loginBtn.style.display = 'none';
+        if (elements.logoutBtn) elements.logoutBtn.style.display = 'inline-block';
+        if (elements.adminBtn) elements.adminBtn.style.display = 'inline-block';
+        if (elements.loginNotice) elements.loginNotice.style.display = 'none';
+        
+        renderMembers();
+        updateSummary();
+        closeLoginModal();
+        showMessage('Login successful!');
+    }
+
+    function logout() {
+        userLoggedIn = false;
+        adminMode = false;
+        
+        const elements = {
+            loginBtn: document.getElementById('loginBtn'),
+            logoutBtn: document.getElementById('logoutBtn'),
+            adminBtn: document.getElementById('adminBtn'),
+            addMemberBtn: document.getElementById('addMemberBtn'),
+            lockBtn: document.getElementById('lockBtn'),
+            loginNotice: document.getElementById('loginNotice')
+        };
+
+        if (elements.loginBtn) elements.loginBtn.style.display = 'inline-block';
+        if (elements.logoutBtn) elements.logoutBtn.style.display = 'none';
+        if (elements.adminBtn) elements.adminBtn.style.display = 'none';
+        if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'none';
+        if (elements.lockBtn) elements.lockBtn.style.display = 'none';
+        if (elements.loginNotice) elements.loginNotice.style.display = 'block';
+        
+        renderMembers();
+        updateSummary();
+        showMessage('Logged out successfully');
+    }
+
+    // Admin functions
+    function showAdminLogin() {
+        const modal = document.getElementById('adminModal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+
+    function closeAdminModal() {
+        const modal = document.getElementById('adminModal');
+        const adminCode = document.getElementById('adminCode');
+        const adminError = document.getElementById('adminError');
+        
+        if (modal) modal.style.display = 'none';
+        if (adminCode) adminCode.value = '';
+        if (adminError) adminError.style.display = 'none';
+    }
+
+    function enableAdminMode() {
+        adminMode = true;
+        
+        const elements = {
+            addMemberBtn: document.getElementById('addMemberBtn'),
+            adminBtn: document.getElementById('adminBtn'),
+            lockBtn: document.getElementById('lockBtn')
+        };
+
+        if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'inline-block';
+        if (elements.adminBtn) elements.adminBtn.style.display = 'none';
+        if (elements.lockBtn) elements.lockBtn.style.display = 'inline-block';
+        
+        renderMembers();
+        closeAdminModal();
+        showMessage('Admin mode activated!', 'success');
+    }
+
+    function lockAdmin() {
+        adminMode = false;
+        
+        const elements = {
+            addMemberBtn: document.getElementById('addMemberBtn'),
+            adminBtn: document.getElementById('adminBtn'),
+            lockBtn: document.getElementById('lockBtn')
+        };
+
+        if (elements.addMemberBtn) elements.addMemberBtn.style.display = 'none';
+        if (elements.adminBtn) elements.adminBtn.style.display = 'inline-block';
+        if (elements.lockBtn) elements.lockBtn.style.display = 'none';
+        
+        renderMembers();
+        showMessage('Admin mode locked', 'success');
+    }
+
+    // Modal functions
+    function openModal(index = -1) {
+        if (!adminMode) {
+            showMessage('Admin access required to edit members', 'error');
+            return;
+        }
+        
+        editingIndex = index;
+        const modal = document.getElementById('memberModal');
+        const title = document.getElementById('modalTitle');
+        const form = document.getElementById('memberForm');
+        
+        if (!modal || !title || !form) {
+            showMessage('Modal elements not found', 'error');
+            return;
+        }
+        
+        if (index >= 0 && members[index]) {
+            title.textContent = 'Edit Brother';
+            const member = members[index];
+            
+            const elements = {
+                name: document.getElementById('name'),
+                imageUrl: document.getElementById('imageUrl'),
+                deposit: document.getElementById('deposit'),
+                loan: document.getElementById('loan'),
+                imageFile: document.getElementById('imageFile')
+            };
+
+            if (elements.name) elements.name.value = member.name || '';
+            if (elements.imageUrl) elements.imageUrl.value = member.imageUrl || '';
+            if (elements.deposit) elements.deposit.value = member.deposit || 0;
+            if (elements.loan) elements.loan.value = member.loan || 0;
+            if (elements.imageFile) elements.imageFile.value = '';
+        } else {
+            title.textContent = 'Add New Brother';
+            form.reset();
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('memberModal');
+        const imageFile = document.getElementById('imageFile');
+        const formMessage = document.getElementById('formMessage');
+        
+        if (modal) modal.style.display = 'none';
+        if (imageFile) imageFile.value = '';
+        if (formMessage) formMessage.innerHTML = '';
+        
+        editingIndex = -1;
+    }
+
+    function deleteMember(index) {
+        if (!adminMode) {
+            showMessage('Admin access required to delete members', 'error');
+            return;
+        }
+        
+        if (!members[index]) {
+            showMessage('Member not found', 'error');
+            return;
+        }
+        
+        if (confirm('Are you sure you want to remove this brother from the portfolio?')) {
+            const member = members[index];
+            
+            if (member.$id && databases) {
+                // Delete from Appwrite
+                deleteMemberFromAppwrite(member.$id);
+            } else {
+                // Remove from local array only (demo mode)
+                members.splice(index, 1);
+                renderMembers();
+                updateSummary();
+                showMessage('Member deleted successfully (demo mode)!');
+            }
+        }
+    }
+
+    // Rendering functions
+    function renderMembers() {
+        if (currentView === 'cards') {
+            renderCardsView();
+        } else {
+            renderTableView();
+        }
+    }
+
+    function renderCardsView() {
+        const grid = document.getElementById('membersGrid');
+        if (!grid) {
+            return;
+        }
+        
+        grid.innerHTML = '';
+
+        members.forEach((member, index) => {
+            const netTotal = (member.deposit || 0) - (member.loan || 0);
+            const card = document.createElement('div');
+            card.className = 'member-card';
+            
+            const financialContent = userLoggedIn ? `
+                <div class="financial-row">
+                    <span class="financial-label">Deposits:</span>
+                    <span class="financial-value deposit">Rs. ${(member.deposit || 0).toLocaleString()}</span>
+                </div>
+                <div class="financial-row">
+                    <span class="financial-label">Loans:</span>
+                    <span class="financial-value loan">Rs. ${(member.loan || 0).toLocaleString()}</span>
+                </div>
+                <div class="financial-row">
+                    <span class="financial-label">Net Total:</span>
+                    <span class="financial-value net-total" style="color: ${netTotal >= 0 ? '#27ae60' : '#e74c3c'}">Rs. ${netTotal.toLocaleString()}</span>
+                </div>
+            ` : `
+                <div class="financial-row">
+                    <span class="financial-label">Deposits:</span>
+                    <span class="financial-value hidden-financial">Login to view</span>
+                </div>
+                <div class="financial-row">
+                    <span class="financial-label">Loans:</span>
+                    <span class="financial-value hidden-financial">Login to view</span>
+                </div>
+                <div class="financial-row">
+                    <span class="financial-label">Net Total:</span>
+                    <span class="financial-value hidden-financial">Login to view</span>
+                </div>
+            `;
+            
+            const memberName = member.name || 'Unknown';
+            const firstLetter = memberName.charAt(0).toUpperCase();
+            
+            card.innerHTML = `
+                <div class="member-image">
+                    ${member.imageUrl ? 
+                        `<img src="${member.imageUrl}" alt="${memberName}" onerror="this.style.display='none'; this.parentNode.innerHTML='${firstLetter}'" />` :
+                        firstLetter
+                    }
+                </div>
+                <div class="member-info">
+                    <div class="member-name">${memberName}</div>
+                    <div class="financial-info">
+                        ${financialContent}
+                    </div>
+                    <div class="actions" style="display: ${adminMode ? 'block' : 'none'};">
+                        <button class="edit-btn" onclick="openModal(${index})">Edit</button>
+                        <button class="delete-btn" onclick="deleteMember(${index})">Delete</button>
+                    </div>
+                </div>
+            `;
+            
+            grid.appendChild(card);
+        });
+    }
+
+    function renderTableView() {
+        const tableBody = document.getElementById('tableBody');
+        const actionsHeader = document.getElementById('actionsHeader');
+        const actionsFooter = document.getElementById('actionsFooter');
+        
+        if (!tableBody) {
+            return;
+        }
+        
+        if (actionsHeader) actionsHeader.style.display = adminMode ? 'table-cell' : 'none';
+        if (actionsFooter) actionsFooter.style.display = adminMode ? 'table-cell' : 'none';
+        
+        tableBody.innerHTML = '';
+
+        members.forEach((member, index) => {
+            const netTotal = (member.deposit || 0) - (member.loan || 0);
+            const row = document.createElement('tr');
+            
+            const depositsDisplay = userLoggedIn ? `Rs. ${(member.deposit || 0).toLocaleString()}` : 'Login required';
+            const loansDisplay = userLoggedIn ? `Rs. ${(member.loan || 0).toLocaleString()}` : 'Login required';
+            const netDisplay = userLoggedIn ? `Rs. ${netTotal.toLocaleString()}` : 'Login required';
+            
+            const memberName = member.name || 'Unknown';
+            const firstLetter = memberName.charAt(0).toUpperCase();
+            
+            row.innerHTML = `
+                <td style="text-align: center; font-weight: bold; color: #666;">${index + 1}</td>
+                <td style="text-align: center;">
+                    <div class="table-image">
+                        ${member.imageUrl ? 
+                            `<img src="${member.imageUrl}" alt="${memberName}" onerror="this.style.display='none'; this.parentNode.innerHTML='${firstLetter}'" />` :
+                            firstLetter
+                        }
+                    </div>
+                </td>
+                <td style="font-weight: 500; color: #2c3e50;">${memberName}</td>
+                <td style="text-align: right; color: ${userLoggedIn ? '#27ae60' : '#999'}; font-weight: bold;">${depositsDisplay}</td>
+                <td style="text-align: right; color: ${userLoggedIn ? '#e74c3c' : '#999'}; font-weight: bold;">${loansDisplay}</td>
+                <td style="text-align: right; color: ${userLoggedIn ? (netTotal >= 0 ? '#27ae60' : '#e74c3c') : '#999'}; font-weight: bold;">${netDisplay}</td>
+                <td style="text-align: center; display: ${adminMode ? 'table-cell' : 'none'};">
+                    <button class="edit-btn" onclick="openModal(${index})" style="margin-right: 5px; padding: 5px 10px; font-size: 0.8rem;">Edit</button>
+                    <button class="delete-btn" onclick="deleteMember(${index})" style="padding: 5px 10px; font-size: 0.8rem;">Delete</button>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+
+        updateTableSummary();
+    }
+
+    function updateTableSummary() {
+        const totalDeposits = members.reduce((sum, member) => sum + (member.deposit || 0), 0);
+        const totalLoans = members.reduce((sum, member) => sum + (member.loan || 0), 0);
+        const netTotal = totalDeposits - totalLoans;
+
+        const elements = {
+            totalMembersTable: document.getElementById('totalMembersTable'),
+            totalDepositsTable: document.getElementById('totalDepositsTable'),
+            totalLoansTable: document.getElementById('totalLoansTable'),
+            netTotalTable: document.getElementById('netTotalTable')
+        };
+
+        if (elements.totalMembersTable) {
+            elements.totalMembersTable.textContent = `${members.length} Brothers`;
+        }
+        
+        if (userLoggedIn) {
+            if (elements.totalDepositsTable) elements.totalDepositsTable.textContent = `Rs. ${totalDeposits.toLocaleString()}`;
+            if (elements.totalLoansTable) elements.totalLoansTable.textContent = `Rs. ${totalLoans.toLocaleString()}`;
+            if (elements.netTotalTable) {
+                elements.netTotalTable.textContent = `Rs. ${netTotal.toLocaleString()}`;
+                elements.netTotalTable.style.color = netTotal >= 0 ? '#27ae60' : '#e74c3c';
+            }
+        } else {
+            if (elements.totalDepositsTable) elements.totalDepositsTable.textContent = 'Login Required';
+            if (elements.totalLoansTable) elements.totalLoansTable.textContent = 'Login Required';
+            if (elements.netTotalTable) elements.netTotalTable.textContent = 'Login Required';
+        }
+    }
+
+    function toggleView() {
+        const toggleBtn = document.getElementById('toggleViewBtn');
+        const membersGrid = document.getElementById('membersGrid');
+        const tableContainer = document.getElementById('tableContainer');
+
+        if (!toggleBtn || !membersGrid || !tableContainer) {
+            return;
+        }
+
+        if (currentView === 'cards') {
+            currentView = 'table';
+            toggleBtn.textContent = '🎴 Card View';
+            membersGrid.style.display = 'none';
+            tableContainer.style.display = 'block';
+            renderTableView();
+        } else {
+            currentView = 'cards';
+            toggleBtn.textContent = '📊 Table View';
+            membersGrid.style.display = 'grid';
+            tableContainer.style.display = 'none';
+            renderCardsView();
+        }
+    }
+
+    function updateSummary() {
+        const totalDeposits = members.reduce((sum, member) => sum + (member.deposit || 0), 0);
+        const totalLoans = members.reduce((sum, member) => sum + (member.loan || 0), 0);
+        const netTotal = totalDeposits - totalLoans;
+
+        const elements = {
+            totalDeposits: document.getElementById('totalDeposits'),
+            totalLoans: document.getElementById('totalLoans'),
+            netTotal: document.getElementById('netTotal')
+        };
+
+        if (userLoggedIn) {
+            if (elements.totalDeposits) elements.totalDeposits.textContent = `Rs. ${totalDeposits.toLocaleString()}`;
+            if (elements.totalLoans) elements.totalLoans.textContent = `Rs. ${totalLoans.toLocaleString()}`;
+            if (elements.netTotal) {
+                elements.netTotal.textContent = `Rs. ${netTotal.toLocaleString()}`;
+                elements.netTotal.style.color = netTotal >= 0 ? '#27ae60' : '#e74c3c';
+            }
+        } else {
+            if (elements.totalDeposits) elements.totalDeposits.textContent = 'Login Required';
+            if (elements.totalLoans) elements.totalLoans.textContent = 'Login Required';
+            if (elements.netTotal) elements.netTotal.textContent = 'Login Required';
+        }
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("📄 DOM loaded — initializing application...");
+        
+        // Test connection first
+        setTimeout(() => {
+            testConnection()
+                .then(() => {
+                    console.log("✅ Connection test successful");
+                    loadMembersFromAppwrite();
+                })
+                .catch(() => {
+                    console.log("⚠️ Connection failed, using demo mode");
+                    initializeDefaultMembers();
+                });
+        }, 1000);
+        
+        // User login form submission
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const enteredId = document.getElementById('userId')?.value;
+                const enteredPassword = document.getElementById('userPassword')?.value;
+                const errorDiv = document.getElementById('loginError');
+                
+                if (enteredId === USER_ID && enteredPassword === USER_PASSWORD) {
+                    login();
+                    if (errorDiv) errorDiv.style.display = 'none';
+                } else {
+                    if (errorDiv) errorDiv.style.display = 'block';
+                    const userIdEl = document.getElementById('userId');
+                    const userPasswordEl = document.getElementById('userPassword');
+                    if (userIdEl) userIdEl.value = '';
+                    if (userPasswordEl) userPasswordEl.value = '';
+                }
+            });
+        }
+
+        // Admin form submission
+        const adminForm = document.getElementById('adminForm');
+        if (adminForm) {
+            adminForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const enteredCode = document.getElementById('adminCode')?.value;
+                const errorDiv = document.getElementById('adminError');
+                
+                if (enteredCode === ADMIN_CODE) {
+                    enableAdminMode();
+                    if (errorDiv) errorDiv.style.display = 'none';
+                } else {
+                    if (errorDiv) errorDiv.style.display = 'block';
+                    const adminCodeEl = document.getElementById('adminCode');
+                    if (adminCodeEl) adminCodeEl.value = '';
+                }
+            });
+        }
+
+        // Member form submission
+        const memberForm = document.getElementById('memberForm');
+        if (memberForm) {
+            memberForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (!adminMode) {
+                    showMessage('Admin access required to save members', 'error');
+                    return;
+                }
+
+                const name = document.getElementById('name')?.value?.trim();
+                const deposit = parseFloat(document.getElementById('deposit')?.value) || 0;
+                const loan = parseFloat(document.getElementById('loan')?.value) || 0;
+                const imageFile = document.getElementById('imageFile')?.files[0];
+                const imageUrlInput = document.getElementById('imageUrl')?.value?.trim();
+
+                if (!name) {
+                    showMessage('Name is required', 'error');
+                    return;
+                }
+
+                showMessage('Saving member...', 'loading');
+                
+                const memberData = {
+                    name: name,
+                    deposit: deposit,
+                    loan: loan,
+                    imageUrl: imageUrlInput || ''
+                };
+
+                // Handle image file (convert to data URL for demo)
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        memberData.imageUrl = e.target.result;
+                        if (databases) {
+                            saveMemberToAppwrite(memberData);
+                        } else {
+                            // Demo mode - save locally
+                            if (editingIndex >= 0) {
+                                members[editingIndex] = { ...members[editingIndex], ...memberData };
+                                showMessage('Member updated successfully (demo mode)!');
+                            } else {
+                                members.push(memberData);
+                                showMessage('Member added successfully (demo mode)!');
+                            }
+                            renderMembers();
+                            updateSummary();
+                            closeModal();
+                        }
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    if (databases) {
+                        saveMemberToAppwrite(memberData);
+                    } else {
+                        // Demo mode - save locally
+                        if (editingIndex >= 0) {
+                            members[editingIndex] = { ...members[editingIndex], ...memberData };
+                            showMessage('Member updated successfully (demo mode)!');
+                        } else {
+                            members.push(memberData);
+                            showMessage('Member added successfully (demo mode)!');
+                        }
+                        renderMembers();
+                        updateSummary();
+                        closeModal();
+                    }
+                }
+            });
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const memberModal = document.getElementById('memberModal');
+            const adminModal = document.getElementById('adminModal');
+            const loginModal = document.getElementById('loginModal');
+            
+            if (event.target === memberModal) {
+                closeModal();
+            }
+            if (event.target === adminModal) {
+                closeAdminModal();
+            }
+            if (event.target === loginModal) {
+                closeLoginModal();
+            }
+        }
+
+        // Initial render with empty state
+        renderMembers();
+        updateSummary();
+    });
+
+    // Global error handler
+    window.addEventListener('error', function(event) {
+        console.error('Uncaught error:', event.error);
+        showMessage(`Application error: ${event.error.message}`, 'error');
+    });
+
+    window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        showMessage(`Promise error: ${event.reason}`, 'error');
+    });
+
+    // Log initialization
+    console.log("✅ 16 Brothers App initialized successfully");
+    console.log("📋 Configuration:", {
+        endpoint: "https://nyc.cloud.appwrite.io/v1",
+        projectId: "6891fd99000b184f5bf3",
+        databaseId: DATABASE_ID,
+        collectionId: COLLECTION_ID,
+        userCredentials: { id: USER_ID, password: "****" },
+        adminCode: "****"
     });
 </script>
 
